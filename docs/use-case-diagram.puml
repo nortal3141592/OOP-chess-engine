@@ -1,32 +1,42 @@
 @startuml
 left to right direction
-actor "Human Player" as Player
+actor "Player" as P
 
 rectangle "Chess Application" {
   usecase "Start New Game" as UC1
+  usecase "Select Game Mode" as UC2
   usecase "Make Move" as UC3
   usecase "View Legal Moves" as UC4
   usecase "Promote Pawn" as UC5
+  usecase "Play Against AI" as UC6
   usecase "Resign Game" as UC7
   usecase "Offer/Respond to Draw" as UC8
   usecase "View Move History" as UC9
   usecase "Annotate Board" as UC10
   usecase "Restart Game" as UC11
-  usecase "Undo Move" as UC12
-  usecase "Redo Move" as UC13
+  usecase "Register Account" as UC12
+  usecase "Log In" as UC13
+  usecase "Log Out" as UC14
+  usecase "View Leaderboard" as UC15
+  usecase "View Player Profile" as UC16
 }
 
-Player --> UC1
-Player --> UC3
-Player --> UC7
-Player --> UC8
-Player --> UC9
-Player --> UC10
-Player --> UC11
-Player --> UC12
-Player --> UC13
+P --> UC1
+P --> UC3
+P --> UC6
+P --> UC7
+P --> UC8
+P --> UC9
+P --> UC10
+P --> UC11
+P --> UC12
+P --> UC13
+P --> UC14
+P --> UC15
+P --> UC16
 
-
+UC1 .> UC2 : <<include>>
+UC1 .> UC13 : <<include>>
 UC3 .> UC4 : <<include>>
 UC5 .> UC3 : <<extend>>
 @enduml
