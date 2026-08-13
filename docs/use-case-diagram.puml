@@ -39,4 +39,5 @@ UC1 .> UC2 : <<include>>
 UC1 .> UC13 : <<include>>
 UC3 .> UC4 : <<include>>
 UC5 .> UC3 : <<extend>>
+UC12 .> UC13 : <<extend>>
 @enduml
