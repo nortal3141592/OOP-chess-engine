@@ -94,3 +94,41 @@
 2.	For castling: system reverts both the King and Rook to their pre-castling squares, and restore their prior “has moved” flags if castling rights tracking depends on them.
 3.	For promotion: system reverts the promoted piece back into a Pawn on its pre promotion square.
 4.	Flow resumes at step 5 of the main scenario.
+
+## Use Case: Offer/Respond to Draw
+
+### Primary Actor: Human Player (the player making the offer)
+
+### Stakeholders and their interests:
+
+- Offering Player: wants a clear, unambiguous way to propose ending the game peacefully, without it being mistaken for a different action (e.g., resignation).
+- Responding Player: wants the choice to accept or decline to be entirely theirs, with no time pressure or ambiguity about what accepting commits them to.
+
+### Preconditions:
+
+- A game is in progress (not already ended).
+- It is reasonable for either player to offer a draw at any point in the game, regardless of whose turn it is.
+### Postconditions (success):
+
+- If accepted: game status is set to “ended by agreed draw”; the board no longer accepts further moves.
+- If declined: game state is entirely unchanged; play continues.
+
+### Trigger: Player selects “Offer Draw” from the game interface.
+
+#### Main Success Scenario:
+
+1. Player selects “Offer Draw.”
+2. System presents the draw offer to the opponent.
+3. Opponent selects “Accept.”
+4. System sets game status to “ended by agreed draw.”
+5. System disables further move input and displays the outcome to both players.
+
+#### Alternate Flows:
+
+#### A1: Opponent declines the draw offer.
+
+1. At step 3, opponent selects “Decline” instead of “Accept.”
+2. System discards the offer; no state change occurs.
+3. Game continues exactly as before the offer was made; use case terminates.
+
+#### A2: Offering player withdraws the offer before the opponent responds.
