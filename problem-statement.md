@@ -18,7 +18,7 @@
 
 - Just to be clear, this doesn't have any chess AI, or multiplayer battles or accounts. It’s a focused, minimalistic, local chess board for two people who already know how to play chess and want the computer to enforce the rules and get out of the way.
 
-## 2 - Identify all actors, including any external systems and any schedules or time triggered actors
+## Identify all actors, including any external systems and any schedules or time triggered actors
 - `Primary Actor`: Human Player, either side (White or Black). Same role, no behavioral distinction between them at the system-boundary level.
 - `External systems`: None. This is a local application. It does not call out to any external service (no network multiplayer, no cloud save, no rules database, no external chess engine).
 - `Scheduled / time-triggered actors`:  No time related events to keep it minimalistic since both of the players are sitting side by side so there's no risk of one player just leaving and the other playing not knowing about it.
