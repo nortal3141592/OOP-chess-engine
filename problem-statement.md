@@ -4,7 +4,7 @@
 
 - Two people want to play a game of chess, but that would need them to have a physical chess board which they don't have at the current moment or if it's too inconvenient to play on the chessboard. The other option that they have is to use online platforms like `chess.com` where a stable internet connection is needed and there's just too much going on the screen - chess tutor, chess ai, etc etc which is overwhelming for the user, the user was searching for something simple and minimalistic.
 
-- What they actually need is simple, they just wat to sit at one machine, take turns making moves on a screen that feels and looks like a real chessboard, and have the computer handle all of the parts that a human is very likely to get wrong, like knowinng which moves are legal, catching illegal moves, recognizing check and checkmate and remember the history of the game so that nothing has to be written down.
+- What they actually need is simple, they just want to sit at one machine, take turns making moves on a screen that feels and looks like a real chessboard, and have the computer handle all of the parts that a human is very likely to get wrong, like knowinng which moves are legal, catching illegal moves, recognizing check and checkmate and remember the history of the game so that nothing has to be written down.
 
 - A player should be able to start a new game and immediately see a standard chess starting position. When it’s their turn, they should be able to click (or drag) a piece and see exactly where it’s allowed to go . 
 
