@@ -1,134 +1,201 @@
-# Use cases
+# Use cases: 3 Use cases
 
-## Use case: Start game
+# Use Case: Start Game
 
-### Primary Actor: Human Player
+**Primary Actor:** Player
 
-### Stakeholders and their interests:
+## Stakeholders
 
-- `Both Players`: want the board reset to a known, correct, standard starting position with no leftover state from any previous game.
+* Both players want the game to begin from a correct, standard starting position.
+* Neither player wants leftover state from an earlier game.
+* Both players want to be recognized as the correct account before any moves count.
 
-### Preconditions:
+## Preconditions
 
-- The application is running.
-- No game is currently in a state that would be silently lost without warning (if a game is already in progress, the player has been made aware that starting new will discard it).
+* The application is running.
+* If a game is already in progress, the player has not yet been warned that starting a new game will discard it.
 
-### Postconditions (success):
+## Postconditions
 
-- A new game session exists.
-- The board is set to the standard chess starting position (all 32 pieces in standard placement).
-- Side to move is set to White.
-- Move history, captured-piece display, and any board annotations are cleared.
-- Game status is set to “`in progress.”`
+* A new game session exists.
+* The board shows the standard starting position.
+* White is set to move first.
+* Move history, captured pieces, and annotations are empty.
+* The correct player accounts are attached to the new game.
+* Game status is set to **in progress**.
 
-## Trigger: Player selects “New Game” from the application interface.
+## Trigger
 
-### Main Success Scenario:
+The player selects **"New Game."**
 
-- Player selects “New Game.”
-- System initializes a new board with all pieces in the standard starting arrangement.
-- System clears move history, captured pieces, and annotations from any prior session.
-- System sets side-to-move to White and game status to “in progress.”
-- System displays the initialized board, ready for White’s first move.
+## Main Flow
 
-## Alternate Flows:
+1. The player selects **"New Game."**
+2. The system asks the player to choose a game mode:
 
-### A1: A game is already in progress when “New Game” is selected.
+   * Play against another human.
+   * Play against the AI.
+3. The system asks the player to log in.
+4. If the mode is human versus human, the system asks the second player to log in as well.
+5. The system creates a new board in the standard starting position.
+6. The system clears move history, captured pieces, and annotations from any earlier game.
+7. The system sets **White to move** and sets the game status to **in progress**.
+8. The system displays the new board, ready for White's first move.
 
-- At step 1, system detects an active, unfinished game exists.
-- System prompts the player to confirm that starting a new game will discard the current one.
-- Player confirms:  flow proceeds at step 2 of the main scenario.
-- Player cancels: system takes no action; the in-progress game continues unaffected, use case terminates.
+## Alternate Flows
 
-### A2: Application is launched for the first time.
+### 1a. A game is already in progress
 
-- At step 1, there is no existing session to discard, so the confirmation step in A1 is skipped entirely.
-- Flow proceeds directly to step 2 of the main scenario.
+1. The system asks the player to confirm that starting a new game will discard the current one.
+2. The player confirms.
+3. The flow continues at **Step 2**.
 
-## Use Case: Undo Move
+**If the player cancels:**
 
-### Primary Actor: Human Player (the player requesting the undo,  not necessarily the player who made the last move, depending on the consent model chosen)
+1. The system takes no action.
+2. The current game continues.
+3. The use case ends.
 
-### Stakeholders and their interests:
+### 3a. Incorrect login credentials
 
-- `Requesting Player`:  wants a mistaken or reconsidered move reverted cleanly, with the game state exactly as it was before that move.
-- `Opponent Player`:  wants assurance that undo cannot be abused to unilaterally erase a move that put them at a disadvantage, without their agreement (assuming the mutual consent model is chosen, per the open design question flagged earlier).
+1. The player enters incorrect login credentials.
+2. The system rejects the login and shows an error.
+3. The player tries again, or the player cancels and the use case ends.
 
-### Preconditions:
+### 4a. First application launch
 
-- At least one move has been made in the current game.
-- The game has not yet ended (no checkmate, stalemate, resignation, or draw recorded).
-- No redo eligible state has been made stale.
+1. The application is opened for the first time and no earlier game exists.
+2. The system skips the confirmation in **Flow 1a**.
+3. The system continues directly at **Step 2**.
 
-### Postconditions (success):
+---
 
-- The board reverts to the exact position it was in before the last move was made.
-- The undone move is removed from the move history display.
-- Captured piece display reverts if the undone move was a capture.
-- Game status reverts.
-- Turn returns to the player who made the undone move.
+# Use Case: Undo Move
 
-## Trigger: Player selects “Undo” from the game interface.
+**Primary Actor:** Player
 
-### Main Success Scenario (mutual-consent model):
+## Stakeholders
 
-1.	Player selects “Undo”.
-2.	System sends an undo request to the opponent for confirmation.
-3.	Opponent accepts the request.
-4.	System reverts the board to the state before the last move was played.
-5.	System removes the move from the visible history, restores prior captured-piece state, and clears any status flags (check/checkmate/stalemate) that resulted from that move.
-6.	Turn is returned to the player who made the undone move.
-7.	System marks the undone move as available for Redo.
+* The requesting player wants a mistaken move reverted cleanly.
+* The opponent wants assurance that a move cannot be erased without their agreement.
+* Neither player wants undo to be available in a rated game, since that would make the recorded result and rating change meaningless.
 
-#### Alternate Flows:
+## Preconditions
 
-#### A1: Opponent declines the undo request.
+* At least one move has been made in the current game.
+* The game has not yet ended.
+* The current game is not a rated game.
+* No earlier undo is still waiting for a response.
 
-1.	At step 3, opponent selects “Decline.”
-2.	System discards the undo request entirely; no state is changed.
-3.	Game continues exactly as before the request; use case terminates.
+## Postconditions
 
-#### A2: Undo is requested on a move that involved castling or promotion.
+* The board matches the exact position before the last move.
+* The undone move is removed from the visible move history.
+* The captured piece display is restored if the undone move was a capture.
+* Check, checkmate, and stalemate status are recalculated.
+* The turn returns to the player who made the undone move.
+* The undone move becomes available for redo.
 
-1.	At step 4, the move being undone is a castling move or a pawn promotion.
-2.	For castling: system reverts both the King and Rook to their pre-castling squares, and restore their prior “has moved” flags if castling rights tracking depends on them.
-3.	For promotion: system reverts the promoted piece back into a Pawn on its pre promotion square.
-4.	Flow resumes at step 5 of the main scenario.
+## Trigger
 
-## Use Case: Offer/Respond to Draw
+The player selects **"Undo."**
 
-### Primary Actor: Human Player (the player making the offer)
+## Main Flow
 
-### Stakeholders and their interests:
+1. The player selects **"Undo."**
+2. The system checks that the game is not rated.
+3. The system sends an undo request to the opponent.
+4. The opponent accepts the request.
+5. The system reverts the board to the position before the last move.
+6. The system removes the move from the visible history and restores the prior captured piece state.
+7. The system recalculates check, checkmate, and stalemate status.
+8. The system returns the turn to the player who made the undone move.
+9. The system marks the undone move as available for redo.
 
-- Offering Player: wants a clear, unambiguous way to propose ending the game peacefully, without it being mistaken for a different action (e.g., resignation).
-- Responding Player: wants the choice to accept or decline to be entirely theirs, with no time pressure or ambiguity about what accepting commits them to.
+## Alternate Flows
 
-### Preconditions:
+### 2a. The current game is rated
 
-- A game is in progress (not already ended).
-- It is reasonable for either player to offer a draw at any point in the game, regardless of whose turn it is.
-### Postconditions (success):
+1. The system rejects the undo request.
+2. The system tells the player that undo is not available in rated games.
+3. The use case ends.
+4. No state changes occur.
 
-- If accepted: game status is set to “ended by agreed draw”; the board no longer accepts further moves.
-- If declined: game state is entirely unchanged; play continues.
+### 4a. The opponent declines the undo request
 
-### Trigger: Player selects “Offer Draw” from the game interface.
+1. The system discards the request.
+2. The game continues unchanged.
+3. The use case ends.
 
-#### Main Success Scenario:
+### 4b. The game is against the AI
 
-1. Player selects “Offer Draw.”
-2. System presents the draw offer to the opponent.
-3. Opponent selects “Accept.”
-4. System sets game status to “ended by agreed draw.”
-5. System disables further move input and displays the outcome to both players.
+1. The system skips the consent step because there is no human opponent to ask.
+2. The system applies the undo immediately.
+3. The flow continues at **Step 5**.
 
-#### Alternate Flows:
+### 5a. The move being undone was a castling move
 
-#### A1: Opponent declines the draw offer.
+1. The system moves the king and the rook back to their positions before castling.
+2. The system restores their prior **"has moved"** status if that status affects future castling rights.
+3. The flow continues at **Step 6**.
 
-1. At step 3, opponent selects “Decline” instead of “Accept.”
-2. System discards the offer; no state change occurs.
-3. Game continues exactly as before the offer was made; use case terminates.
+### 5b. The move being undone was a pawn promotion
 
-#### A2: Offering player withdraws the offer before the opponent responds.
+1. The system replaces the promoted piece with a pawn on its original square.
+2. The flow continues at **Step 6**.
+
+---
+
+# Use Case: Offer or Respond to Draw
+
+**Primary Actor:** Player
+
+## Stakeholders
+
+* The offering player wants a clear way to propose ending the game peacefully, separate from resigning.
+* The responding player wants the choice to accept or decline to be entirely their own.
+* Neither player wants ambiguity about what accepting a draw means.
+
+## Preconditions
+
+* A game is in progress.
+* The game has not already ended.
+
+## Postconditions
+
+### If the draw is accepted
+
+* The game status is set to **ended by agreed draw**.
+* The board no longer accepts moves.
+
+### If the draw is declined or withdrawn
+
+* The game state remains unchanged.
+* Play continues.
+
+## Trigger
+
+The player selects **"Offer Draw."**
+
+## Main Flow
+
+1. The player selects **"Offer Draw."**
+2. The system presents the draw offer to the opponent.
+3. The opponent selects **"Accept."**
+4. The system sets the game status to **ended by agreed draw**.
+5. The system disables further moves and shows the outcome to both players.
+
+## Alternate Flows
+
+### 3a. The opponent selects "Decline"
+
+1. The system discards the draw offer.
+2. The game continues unchanged.
+3. The use case ends.
+
+### 3b. The offering player withdraws the offer
+
+1. The offering player withdraws the offer before the opponent responds.
+2. The system cancels the pending offer and removes it from the opponent's view.
+3. The game continues unchanged.
+4. The use case ends without a decision from the opponent.
