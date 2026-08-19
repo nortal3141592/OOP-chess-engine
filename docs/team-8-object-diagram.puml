@@ -1,0 +1,80 @@
+/'
+Team ID: 8
+Team Members:
+1. Palin Jena - 20251501123
+2. Parmar Jaynil Dineshchandra - 20251501124
+3. Parth Doifode - 20251501125
+4. Mehta Aryan HarshitBhai - 20251501108
+5. Pal Rachhadiya - 20251501122
+'/
+
+@startuml
+object "acc_kasparov: Account" as acc1 {
+  username = "kasparov88"
+  passwordHash = "a1c9f0..."
+}
+
+object "acc_karpov: Account" as acc2 {
+  username = "karpov_a"
+  passwordHash = "77bd4e..."
+}
+
+object "whitePlayer: HumanPlayer" as p1 {
+  color = WHITE
+}
+
+object "blackPlayer: HumanPlayer" as p2 {
+  color = BLACK
+}
+
+object "game_1042: Game" as g {
+  mode = PVP
+  isRated = true
+  status = IN_PROGRESS
+  turn = BLACK
+}
+
+object "board: Board" as b
+
+object "wPawn_e4: Piece" as pc1 {
+  color = WHITE
+  type = PAWN
+  position = "e4"
+}
+
+object "bKnight_f6: Piece" as pc2 {
+  color = BLACK
+  type = KNIGHT
+  position = "f6"
+}
+
+object "move_1: Move" as m1 {
+  from = "e2"
+  to = "e4"
+  isCapture = false
+  isCastling = false
+  isPromotion = false
+  status = ACTIVE
+}
+
+object "move_2: Move" as m2 {
+  from = "g8"
+  to = "f6"
+  isCapture = false
+  isCastling = false
+  isPromotion = false
+  status = ACTIVE
+}
+
+p1 -- acc1 : authenticated as
+p2 -- acc2 : authenticated as
+g "1" *-- "2" p1
+g *-- p2
+g *-- b
+b *-- pc1
+b *-- pc2
+g *-- m1
+g *-- m2
+m1 -- pc1 : moves
+m2 -- pc2 : moves
+@enduml
