@@ -39,3 +39,45 @@ Team Members:
 | Responsibilities | Collaborators |
 | --- | --- |
 | - Knows piece placement<br>- Resets itself to the standard starting position<br>- Applies / reverses a move, including reversal of castling (king+rook back, restore "has-moved" status) and promotion (replace promoted piece with a pawn)<br>- Recalculates check, checkmate, and stalemate status after a move is applied or undone | - Piece<br>- Move<br>- Game |
+
+---
+
+### Move
+
+| Responsibilities | Collaborators |
+| --- | --- |
+| - Knows its from/to positions, the piece moved, whether it was a capture, and whether it was a castling or promotion move | - Piece<br>- Board |
+
+---
+
+### Piece
+
+| Responsibilities | Collaborators |
+| --- | --- |
+| - Knows its color, type, and current position | - Board<br>- Move |
+
+---
+
+### Annotation
+
+| Responsibilities | Collaborators |
+| --- | --- |
+| - Knows what it marks on the board (a square or arrow) | - Game |
+
+---
+
+### DrawOffer
+
+| Responsibilities | Collaborators |
+| --- | --- |
+| - Knows which player made the offer, which player must respond, and its status (pending/accepted/declined/withdrawn)<br>- Records acceptance *(triggers Game to end)*, decline *(discards itself)*, or withdrawal *(cancels itself, removed from opponent's view)* | - Player<br>- Game |
+
+---
+
+### UndoRequest
+
+| Responsibilities | Collaborators |
+| --- | --- |
+| - Knows the requesting player and its status (pending/accepted/declined)<br>- Knows whether opponent consent is required at all *(skipped against an AI opponent, per alt-flow 4b)*<br>- Records acceptance *(triggers Board/Game to revert the last move)* or decline *(discards itself)* | - Player<br>- Game<br>- Board |
+
+---
