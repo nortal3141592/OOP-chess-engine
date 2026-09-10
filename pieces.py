@@ -53,3 +53,46 @@ class Piece:
 
     def __hash__(self):
         return hash((self.piece_type, self.color))
+
+class Pawn(Piece):
+    piece_type = PAWN
+    _base_value = 1
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'P' if self.color == WHITE else 'p'
+
+
+class Knight(Piece):
+    piece_type = KNIGHT
+    _base_value = 3
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'N' if self.color == WHITE else 'n'
+
+
+class Bishop(Piece):
+    piece_type = BISHOP
+    _base_value = 3
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'B' if self.color == WHITE else 'b'
+
+
+class Rook(Piece):
+    piece_type = ROOK
+    _base_value = 5
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'R' if self.color == WHITE else 'r'
