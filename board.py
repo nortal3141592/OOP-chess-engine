@@ -102,6 +102,43 @@ class Board:
                         targets.append(target)
         return targets
 
+     def _sliding_targets(self, square, piece, directions):
+        """Shared logic for bishop/rook/queen"""
+        row, col = square
+        targets = []
+        for dr, dc in directions:
+            r, c = row + dr, col + dc
+            while self.in_bounds((r, c)):
+                target_piece = self.get_piece((r, c))
+                if target_piece is None:
+                    targets.append((r, c))
+                else:
+                    if target_piece.color != piece.color:
+                        targets.append((r, c))
+                    break  # blocked, whether it's a friend or foe
+                r += dr
+                c += dc
+        return targets
+
+    # ------------------------------------------------------------------
+    # Check detection
+    # ------------------------------------------------------------------
+    def is_square_attacked(self, square, by_color):
+        """True if any piece of `by_color` could move to `square` right now."""
+        for row in range(8):
+            for col in range(8):
+                piece = self._grid[row][col]
+                if piece and piece.color == by_color:
+                    if square in self._pseudo_legal_targets((row, col)):
+                        return True
+        return False
+
+    def is_in_check(self, color):
+        king_square = self.find_king(color)
+        if king_square is None:
+            return False
+        return self.is_square_attacked(king_square, other_color(color))
+
     def move_piece(self, start, end):
         if not (self.in_bounds(start) and self.in_bounds(end)):
             return False
