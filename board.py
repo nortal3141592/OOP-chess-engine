@@ -139,6 +139,59 @@ class Board:
             return False
         return self.is_square_attacked(king_square, other_color(color))
 
+    # ------------------------------------------------------------------
+    # Legal move generation
+    # ------------------------------------------------------------------
+    def get_legal_moves(self, square):
+        piece = self.get_piece(square)
+        if piece is None or piece.color != self.turn:
+            return []
+
+        legal_targets = []
+        for target in self._pseudo_legal_targets(square):
+            captured = self._simulate_move(square, target)
+            if not self.is_in_check(piece.color):
+                legal_targets.append(target)
+            self._undo_simulated_move(square, target, captured)
+        return legal_targets
+
+    def all_legal_moves(self, color):
+        """Every (start, end) pair that's legal for `color` right now.
+        Used for checkmate/stalemate detection."""
+        moves = []
+        for row in range(8):
+            for col in range(8):
+                piece = self._grid[row][col]
+                if piece and piece.color == color:
+                    for target in self.get_legal_moves((row, col)):
+                        moves.append(((row, col), target))
+        return moves
+
+    def is_checkmate(self, color):
+        return self.is_in_check(color) and len(self.all_legal_moves(color)) == 0
+
+    def is_stalemate(self, color):
+        return not self.is_in_check(color) and len(self.all_legal_moves(color)) == 0
+
+    # ------------------------------------------------------------------
+    # Simulating a move (Palin Ignore this)
+    # ------------------------------------------------------------------
+    def _simulate_move(self, start, end):
+        start_row, start_col = start
+        end_row, end_col = end
+        piece = self._grid[start_row][start_col]
+        captured = self._grid[end_row][end_col]
+        self._grid[start_row][start_col] = None
+        self._grid[end_row][end_col] = piece
+        return captured
+
+    def _undo_simulated_move(self, start, end, captured):
+        start_row, start_col = start
+        end_row, end_col = end
+        piece = self._grid[end_row][end_col]
+        self._grid[start_row][start_col] = piece
+        self._grid[end_row][end_col] = captured
+
     def move_piece(self, start, end):
         if not (self.in_bounds(start) and self.in_bounds(end)):
             return False
