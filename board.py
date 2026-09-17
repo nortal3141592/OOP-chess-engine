@@ -53,6 +53,41 @@ class Board:
             return self._king_targets(square, piece)
         return []
 
+    def _pawn_targets(self, square, piece):
+        row, col = square
+        targets = []
+        direction = -1 if piece.color == WHITE else 1
+        start_row = 6 if piece.color == WHITE else 1
+
+        # Straight ahead
+        one_step = (row + direction, col)
+        if self.in_bounds(one_step) and self.get_piece(one_step) is None:
+            targets.append(one_step)
+            two_step = (row + 2 * direction, col)
+            if row == start_row and self.get_piece(two_step) is None:
+                targets.append(two_step)
+
+        # Diagonal captures
+        for dc in (-1, 1):
+            diag = (row + direction, col + dc)
+            if self.in_bounds(diag):
+                target_piece = self.get_piece(diag)
+                if target_piece and target_piece.color != piece.color:
+                    targets.append(diag)
+        return targets
+
+    def _knight_targets(self, square, piece):
+        row, col = square
+        offsets = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+        targets = []
+        for dr, dc in offsets:
+            target = (row + dr, col + dc)
+            if self.in_bounds(target):
+                target_piece = self.get_piece(target)
+                if target_piece is None or target_piece.color != piece.color:
+                    targets.append(target)
+        return targets
+
     def move_piece(self, start, end):
         if not (self.in_bounds(start) and self.in_bounds(end)):
             return False
