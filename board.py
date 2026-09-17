@@ -23,6 +23,36 @@ class Board:
         row, col = square
         return 0 <= row < 8 and 0 <= col < 8
 
+    def find_king(self, color):
+        for row in range(8):
+            for col in range(8):
+                piece = self._grid[row][col]
+                if piece and piece.piece_type == KING and piece.color == color:
+                    return (row, col)
+        return None
+
+    # ------------------------------------------------------------------
+    # Pseudo-legal move generation
+    # ------------------------------------------------------------------
+    def _pseudo_legal_targets(self, square):
+        piece = self.get_piece(square)
+        if piece is None:
+            return []
+        if piece.piece_type == PAWN:
+            return self._pawn_targets(square, piece)
+        if piece.piece_type == KNIGHT:
+            return self._knight_targets(square, piece)
+        if piece.piece_type == BISHOP:
+            return self._sliding_targets(square, piece, [(-1, -1), (-1, 1), (1, -1), (1, 1)])
+        if piece.piece_type == ROOK:
+            return self._sliding_targets(square, piece, [(-1, 0), (1, 0), (0, -1), (0, 1)])
+        if piece.piece_type == QUEEN:
+            return self._sliding_targets(square, piece, [(-1, -1), (-1, 1), (1, -1), (1, 1),
+                                                           (-1, 0), (1, 0), (0, -1), (0, 1)])
+        if piece.piece_type == KING:
+            return self._king_targets(square, piece)
+        return []
+
     def move_piece(self, start, end):
         if not (self.in_bounds(start) and self.in_bounds(end)):
             return False
