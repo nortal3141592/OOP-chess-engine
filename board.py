@@ -88,6 +88,20 @@ class Board:
                     targets.append(target)
         return targets
 
+    def _king_targets(self, square, piece):
+        row, col = square
+        targets = []
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                target = (row + dr, col + dc)
+                if self.in_bounds(target):
+                    target_piece = self.get_piece(target)
+                    if target_piece is None or target_piece.color != piece.color:
+                        targets.append(target)
+        return targets
+
     def move_piece(self, start, end):
         if not (self.in_bounds(start) and self.in_bounds(end)):
             return False
