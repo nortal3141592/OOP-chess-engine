@@ -1,5 +1,8 @@
 from pieces import PIECE_CLASSES, ROOK, KNIGHT, BISHOP, QUEEN, KING, PAWN, WHITE, BLACK
 
+def other_color(color):
+    return BLACK if color == WHITE else WHITE
+
 class Board:
 
     def __init__(self):
@@ -102,7 +105,7 @@ class Board:
                         targets.append(target)
         return targets
 
-     def _sliding_targets(self, square, piece, directions):
+    def _sliding_targets(self, square, piece, directions):
         """Shared logic for bishop/rook/queen"""
         row, col = square
         targets = []
