@@ -8,6 +8,7 @@ class Board:
     def __init__(self):
         self._grid = [[None] * 8 for _ in range(8)]
         self.turn = WHITE
+        self.last_move = None
         self._setup_start_position()
 
     def _setup_start_position(self):
@@ -196,22 +197,20 @@ class Board:
         self._grid[end_row][end_col] = captured
 
     def move_piece(self, start, end):
-        if not (self.in_bounds(start) and self.in_bounds(end)):
-            return False
-
-        piece = self.get_piece(start)
-        if piece is None or piece.color != self.turn:
-            return False
-
-        target = self.get_piece(end)
-        if target is not None and target.color == piece.color:
+        if end not in self.get_legal_moves(start):
             return False
 
         start_row, start_col = start
         end_row, end_col = end
+        piece = self._grid[start_row][start_col]
         self._grid[start_row][start_col] = None
         self._grid[end_row][end_col] = piece
         piece.has_moved = True
 
-        self.turn = BLACK if self.turn == WHITE else WHITE
+        # PAWN PROMOTION TO QUEEN FOR NOW
+        if piece.piece_type == PAWN and end_row in (0, 7):
+            self._grid[end_row][end_col] = PIECE_CLASSES[QUEEN](piece.color, has_moved=True)
+
+        self.last_move = (start, end)
+        self.turn = other_color(self.turn)
         return True
