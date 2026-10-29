@@ -9,6 +9,46 @@ QUEEN = 'queen'
 KING = 'king'
 
 
+class Move:
+
+    def __init__(self, start, end, piece, captured_piece=None,
+        is_castle=False, is_en_passant=False, captured_square=None):
+        self.start = start                   
+        self.end = end                       
+        self.piece = piece                    
+        self.captured_piece = captured_piece  
+        self.is_castle = is_castle
+        self.is_en_passant = is_en_passant
+        self.is_promotion = False            
+
+        self.captured_square = captured_square if captured_square else end
+
+    @staticmethod
+    def square_name(square):
+        row, col = square
+        return f"{'abcdefgh'[col]}{8 - row}"
+
+    def __eq__(self, other):
+        if not isinstance(other, Move):
+            return NotImplemented
+        return (self.start == other.start and self.end == other.end and
+                self.piece == other.piece and
+                self.is_castle == other.is_castle and
+                self.is_en_passant == other.is_en_passant)
+
+    def __str__(self):
+        if self.is_castle:
+            return "O-O" if self.end[1] == 6 else "O-O-O"
+        text = f"{Move.square_name(self.start)}-{Move.square_name(self.end)}"
+        if self.is_promotion:
+            text += "=Q"
+        return text
+
+    def __repr__(self):
+        return f"Move({self})"
+
+
+
 class Piece:
     piece_type = None
     _base_value = 0
@@ -126,3 +166,5 @@ PIECE_CLASSES = {
     QUEEN: Queen,
     KING: King,
 }
+
+
