@@ -247,3 +247,75 @@ class Board:
 
     def is_stalemate(self, color):
         return not self.is_in_check(color) and not self.has_legal_moves(color)
+
+
+    # ------------------------------------------------------------------
+    # Moving pieces around on the grid
+    # ------------------------------------------------------------------
+    def _castle_rook_squares(self, move):
+        row = move.end[0]
+        if move.end[1] == 6:
+            return (row, 7), (row, 5)
+        return (row, 0), (row, 3)
+
+    def _affected_squares(self, move):
+        squares = {move.start, move.end, move.captured_square}
+        if move.is_castle:
+            rook_from, rook_to = self._castle_rook_squares(move)
+            squares |= {rook_from, rook_to}
+        return squares
+
+    def _shift_pieces(self, move):
+        start_row, start_col = move.start
+        end_row, end_col = move.end
+        if move.is_en_passant:
+            cap_row, cap_col = move.captured_square
+            self._grid[cap_row][cap_col] = None
+        self._grid[start_row][start_col] = None
+        self._grid[end_row][end_col] = move.piece
+        if move.is_castle:
+            (from_row, from_col), (to_row, to_col) = self._castle_rook_squares(move)
+            self._grid[to_row][to_col] = self._grid[from_row][from_col]
+            self._grid[from_row][from_col] = None
+
+    def _leaves_king_in_check(self, move):
+        saved = {sq: self.get_piece(sq) for sq in self._affected_squares(move)}
+        self._shift_pieces(move)
+        in_check = self.is_in_check(move.piece.color)
+        for (row, col), piece in saved.items():
+            self._grid[row][col] = piece
+        return in_check
+
+    # ------------------------------------------------------------------
+    # Making a real move
+    # ------------------------------------------------------------------
+    def move_piece(self, start, end):
+        for move in self.get_legal_moves(start):
+            if move.end == end:
+                self._execute(move)
+                return True
+        return False
+
+    def _execute(self, move):
+        self._shift_pieces(move)
+        move.piece.has_moved = True
+
+        if move.is_castle:
+            _, rook_to = self._castle_rook_squares(move)
+            self.get_piece(rook_to).has_moved = True
+
+        
+        end_row, end_col = move.end
+        if move.piece.piece_type == PAWN and end_row in (0, 7):
+            self._grid[end_row][end_col] = PIECE_CLASSES[QUEEN](move.piece.color, has_moved=True)
+            move.is_promotion = True
+
+        if move.piece.piece_type == PAWN and abs(end_row - move.start[0]) == 2:
+            self.en_passant_target = ((move.start[0] + end_row) // 2, move.start[1])
+        else:
+            self.en_passant_target = None
+
+        if move.captured_piece is not None:
+            self.captured_pieces[move.piece.color].append(move.captured_piece)
+        self.move_log.append(move)
+        self.turn = other_color(self.turn)
