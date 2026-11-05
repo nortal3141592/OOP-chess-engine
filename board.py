@@ -155,3 +155,95 @@ class Board:
                 and not self.is_square_attacked((home_row, 2), enemy)):
             moves.append(Move(square, (home_row, 2), piece, is_castle=True))
         return moves
+
+
+    # ------------------------------------------------------------------
+    # Attack / check detection
+    # ------------------------------------------------------------------
+    def is_square_attacked(self, square, by_color):
+        row, col = square
+
+        pawn_row = row + 1 if by_color == WHITE else row - 1
+        for dc in (-1, 1):
+            s = (pawn_row, col + dc)
+            if self.in_bounds(s):
+                p = self.get_piece(s)
+                if p is not None and p.piece_type == PAWN and p.color == by_color:
+                    return True
+
+        for dr, dc in KNIGHT_OFFSETS:
+            s = (row + dr, col + dc)
+            if self.in_bounds(s):
+                p = self.get_piece(s)
+                if p is not None and p.piece_type == KNIGHT and p.color == by_color:
+                    return True
+
+        for dr, dc in KING_OFFSETS:
+            s = (row + dr, col + dc)
+            if self.in_bounds(s):
+                p = self.get_piece(s)
+                if p is not None and p.piece_type == KING and p.color == by_color:
+                    return True
+
+        for directions, attackers in ((DIAGONALS, (BISHOP, QUEEN)), (STRAIGHTS, (ROOK, QUEEN))):
+            for dr, dc in directions:
+                r, c = row + dr, col + dc
+                while self.in_bounds((r, c)):
+                    p = self.get_piece((r, c))
+                    if p is not None:
+                        if p.color == by_color and p.piece_type in attackers:
+                            return True
+                        break
+                    r += dr
+                    c += dc
+        return False
+
+    def is_in_check(self, color):
+        king_square = self.find_king(color)
+        if king_square is None:
+            return False
+        return self.is_square_attacked(king_square, other_color(color))
+
+    # ------------------------------------------------------------------
+    # Legal move generation
+    # ------------------------------------------------------------------
+    def get_legal_moves(self, square):
+        piece = self.get_piece(square)
+        if piece is None or piece.color != self.turn:
+            return []
+        return [m for m in self._pseudo_legal_moves(square)
+                if not self._leaves_king_in_check(m)]
+
+    def all_legal_moves(self, color):
+        original_turn = self.turn
+        self.turn = color
+        try:
+            moves = []
+            for row in range(8):
+                for col in range(8):
+                    piece = self._grid[row][col]
+                    if piece is not None and piece.color == color:
+                        moves.extend(self.get_legal_moves((row, col)))
+            return moves
+        finally:
+            self.turn = original_turn
+
+    def has_legal_moves(self, color):
+        original_turn = self.turn
+        self.turn = color
+        try:
+            for row in range(8):
+                for col in range(8):
+                    piece = self._grid[row][col]
+                    if piece is not None and piece.color == color:
+                        if self.get_legal_moves((row, col)):
+                            return True
+            return False
+        finally:
+            self.turn = original_turn
+
+    def is_checkmate(self, color):
+        return self.is_in_check(color) and not self.has_legal_moves(color)
+
+    def is_stalemate(self, color):
+        return not self.is_in_check(color) and not self.has_legal_moves(color)
