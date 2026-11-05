@@ -96,3 +96,34 @@ class Rook(Piece):
 
     def symbol(self):
         return 'R' if self.color == WHITE else 'r'
+
+class Queen(Piece):
+    piece_type = QUEEN
+    _base_value = 9
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'Q' if self.color == WHITE else 'q'
+
+
+class King(Piece):
+    piece_type = KING
+    _base_value = 0
+
+    def __init__(self, color, has_moved=False):
+        super().__init__(color, has_moved)
+
+    def symbol(self):
+        return 'K' if self.color == WHITE else 'k'
+
+
+PIECE_CLASSES = {
+    PAWN: Pawn,
+    KNIGHT: Knight,
+    BISHOP: Bishop,
+    ROOK: Rook,
+    QUEEN: Queen,
+    KING: King,
+}    
