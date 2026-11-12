@@ -156,7 +156,6 @@ class Board:
             moves.append(Move(square, (home_row, 2), piece, is_castle=True))
         return moves
 
-
     # ------------------------------------------------------------------
     # Attack / check detection
     # ------------------------------------------------------------------
@@ -247,7 +246,6 @@ class Board:
 
     def is_stalemate(self, color):
         return not self.is_in_check(color) and not self.has_legal_moves(color)
-
 
     # ------------------------------------------------------------------
     # Moving pieces around on the grid
