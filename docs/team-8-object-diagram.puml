@@ -6,75 +6,51 @@ Team Members:
 3. Parth Doifode - 20251501125
 4. Mehta Aryan HarshitBhai - 20251501108
 5. Pal Rachhadiya - 20251501122
+
+Object snapshot after White played e2-e4 (click-to-click),
+matching Board / Move / Piece as implemented.
 '/
 
 @startuml
-object "acc_kasparov: Account" as acc1 {
-  username = "kasparov88"
-  passwordHash = "a1c9f0..."
+title Object diagram — after 1. e2-e4
+
+object "board: Board" as b {
+  turn = "black"
+  en_passant_target = (5, 4)
+  captured_pieces = {white: [], black: []}
 }
 
-object "acc_karpov: Account" as acc2 {
-  username = "karpov_a"
-  passwordHash = "77bd4e..."
+object "whitePawn: Pawn" as wp {
+  color = "white"
+  piece_type = "pawn"
+  _value = 1
+  has_moved = True
 }
 
-object "whitePlayer: HumanPlayer" as p1 {
-  color = WHITE
+object "blackKnight: Knight" as bn {
+  color = "black"
+  piece_type = "knight"
+  _value = 3
+  has_moved = False
 }
 
-object "blackPlayer: HumanPlayer" as p2 {
-  color = BLACK
+object "move_e2e4: Move" as m1 {
+  start = (6, 4)
+  end = (4, 4)
+  is_castle = False
+  is_en_passant = False
+  is_promotion = False
+  captured_piece = None
+  captured_square = (4, 4)
 }
 
-object "game_1042: Game" as g {
-  mode = PVP
-  isRated = true
-  status = IN_PROGRESS
-  turn = BLACK
+object "stats: Piece.Stats" as st {
+  total_created = 32
 }
 
-object "board: Board" as b
-
-object "wPawn_e4: Piece" as pc1 {
-  color = WHITE
-  type = PAWN
-  position = "e4"
-}
-
-object "bKnight_f6: Piece" as pc2 {
-  color = BLACK
-  type = KNIGHT
-  position = "f6"
-}
-
-object "move_1: Move" as m1 {
-  from = "e2"
-  to = "e4"
-  isCapture = false
-  isCastling = false
-  isPromotion = false
-  status = ACTIVE
-}
-
-object "move_2: Move" as m2 {
-  from = "g8"
-  to = "f6"
-  isCapture = false
-  isCastling = false
-  isPromotion = false
-  status = ACTIVE
-}
-
-p1 -- acc1 : authenticated as
-p2 -- acc2 : authenticated as
-g "1" *-- "2" p1
-g *-- p2
-g *-- b
-b *-- pc1
-b *-- pc2
-g *-- m1
-g *-- m2
-m1 -- pc1 : moves
-m2 -- pc2 : moves
+b *-- wp : _grid[4][4]
+b *-- bn : _grid[0][6]
+b *-- m1 : move_log[0]
+m1 --> wp : piece
+b .. st : pieces recorded at construction
 @enduml

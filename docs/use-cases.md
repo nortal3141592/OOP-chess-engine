@@ -1,4 +1,24 @@
-# Use cases: 3 Use cases
+<!--
+Team ID: 8
+Team Members:
+1. Palin Jena - 20251501123
+2. Parmar Jaynil Dineshchandra - 20251501124
+3. Parth Doifode - 20251501125
+4. Mehta Aryan HarshitBhai - 20251501108
+5. Pal Rachhadiya - 20251501122
+
+Synced to main.py / board.py / pieces.py. Earlier drafts (login, AI, undo, draw) are not implemented.
+-->
+
+# Use cases (as implemented)
+
+**Primary actor:** Human player (White or Black). Both sit at the same machine; there is no account and no AI.
+
+**External systems:** None (local Pygame window).
+
+**Diagram:** [use-case-diagram.puml](use-case-diagram.puml)
+
+---
 
 # Use Case: Start Game
 
@@ -6,196 +26,160 @@
 
 ## Stakeholders
 
-* Both players want the game to begin from a correct, standard starting position.
-* Neither player wants leftover state from an earlier game.
-* Both players want to be recognized as the correct account before any moves count.
+* Both players want a correct standard starting position.
+* Neither player wants leftover pieces, history, or captures from an earlier game.
 
 ## Preconditions
 
-* The application is running.
-* If a game is already in progress, the player has not yet been warned that starting a new game will discard it.
+* For **New Game:** the application is already running (`main()` event loop).
+* For **first launch:** the player has started `python main.py`.
 
 ## Postconditions
 
-* A new game session exists.
-* The board shows the standard starting position.
-* White is set to move first.
-* Move history, captured pieces, and annotations are empty.
-* The correct player accounts are attached to the new game.
-* Game status is set to **in progress**.
+* A new `Board()` exists with `_setup_start_position()`.
+* White to move (`board.turn == "white"`).
+* `move_log` is empty; `captured_pieces` are empty lists; `en_passant_target` is `None`.
+* UI selection is cleared (`selected_square is None`, `legal_moves == []`).
+* Header shows “White to move”.
+
+There is no game-mode picker, login, confirmation dialog, or annotation list.
 
 ## Trigger
 
-The player selects **"New Game."**
+The player launches the app, **or** clicks **New Game**.
 
 ## Main Flow
 
-1. The player selects **"New Game."**
-2. The system asks the player to choose a game mode:
-
-   * Play against another human.
-   * Play against the AI.
-3. The system asks the player to log in.
-4. If the mode is human versus human, the system asks the second player to log in as well.
-5. The system creates a new board in the standard starting position.
-6. The system clears move history, captured pieces, and annotations from any earlier game.
-7. The system sets **White to move** and sets the game status to **in progress**.
-8. The system displays the new board, ready for White's first move.
+1. The player launches `main.py`, or clicks **New Game**.
+2. The system constructs `Board()`, which places 32 pieces via `PIECE_CLASSES`.
+3. On first launch only, the system prints `Piece.Stats.summary()` to the console.
+4. The system draws the board, empty history, empty capture rows, and White to move.
 
 ## Alternate Flows
 
-### 1a. A game is already in progress
+### 1a. A game is already in progress (New Game)
 
-1. The system asks the player to confirm that starting a new game will discard the current one.
-2. The player confirms.
+1. The system **does not** ask for confirmation.
+2. The previous `Board` is discarded.
 3. The flow continues at **Step 2**.
 
-**If the player cancels:**
+### 1b. Application closed
 
-1. The system takes no action.
-2. The current game continues.
-3. The use case ends.
-
-### 3a. Incorrect login credentials
-
-1. The player enters incorrect login credentials.
-2. The system rejects the login and shows an error.
-3. The player tries again, or the player cancels and the use case ends.
-
-### 4a. First application launch
-
-1. The application is opened for the first time and no earlier game exists.
-2. The system skips the confirmation in **Flow 1a**.
-3. The system continues directly at **Step 2**.
+1. The player closes the window (`pygame.QUIT`).
+2. `pygame.quit()` runs. No game is saved.
 
 ---
 
-# Use Case: Undo Move
+# Use Case: Make Move
+
+**Primary Actor:** Player whose color equals `board.turn`
+
+## Stakeholders
+
+* The player to move wants only legal destinations shown and accepted.
+* The opponent wants the turn to switch only after a legal move.
+* Both want special rules (castle, en passant, promotion to queen) applied without extra dialogs.
+
+## Preconditions
+
+* A `Board` exists.
+* `get_game_state(board)` is not `'checkmate'` or `'stalemate'`.
+* It is that player’s turn.
+
+## Postconditions (legal destination)
+
+* The piece occupies the destination square; start square is empty (castle also moves the rook).
+* `piece.has_moved` is `True` (and the rook, if castling).
+* If a capture occurred, the captured piece is on `captured_pieces[mover]`.
+* The move is appended to `move_log`.
+* Turn is `other_color` of the mover.
+* `en_passant_target` is the skipped square after a double pawn step, otherwise `None`.
+* Pawn on rank 1 or 8 is replaced by `Queen(color, has_moved=True)` and `move.is_promotion` is `True`.
+
+## Trigger
+
+The player clicks a square on the 8×8 board.
+
+## Main Flow
+
+1. The player clicks a square that holds one of their pieces (`piece.color == board.turn`).
+2. The system sets `selected_square` and calls `board.get_legal_moves(square)`.
+3. The system draws green dots on each legal `Move.end`.
+4. The player clicks a destination square.
+5. The system calls `board.move_piece(start, end)`.
+6. `move_piece` finds a legal `Move` with that `end` and runs `_execute`.
+7. The system clears selection and legal-move highlights.
+8. The system recomputes `get_game_state` and redraws header, history, captures, and check highlight.
+
+## Alternate Flows
+
+### 1a. Empty square, opponent piece, or click off the board
+
+1. The system ignores the click (or ignores it if it is not on the board).
+2. Selection unchanged if there was none.
+
+### 4a. Destination is not a legal move
+
+1. `move_piece` returns `False`.
+2. If the clicked square holds another of the player’s pieces, the system **reselects** that piece and shows its legal moves.
+3. Otherwise selection is cleared.
+
+### 4b. Game already over
+
+1. Board clicks are ignored (see Use Case: Observe Game End).
+2. **New Game** still works.
+
+### 6a. Castling
+
+1. `_execute` also moves the rook (`_castle_rook_squares`) and sets the rook’s `has_moved`.
+2. History shows `O-O` or `O-O-O`.
+
+### 6b. En passant
+
+1. The captured pawn is removed from `captured_square` (beside the mover), not from the destination.
+
+### 6c. Promotion
+
+1. The pawn is replaced by a queen. The player is **not** asked which piece to choose.
+
+---
+
+# Use Case: Observe Check and Game End
 
 **Primary Actor:** Player
 
 ## Stakeholders
 
-* The requesting player wants a mistaken move reverted cleanly.
-* The opponent wants assurance that a move cannot be erased without their agreement.
-* Neither player wants undo to be available in a rated game, since that would make the recorded result and rating change meaningless.
+* The side to move wants to know when they are in check.
+* Both players want checkmate and stalemate to stop play and show a result.
 
 ## Preconditions
 
-* At least one move has been made in the current game.
-* The game has not yet ended.
-* The current game is not a rated game.
-* No earlier undo is still waiting for a response.
+* A `Board` exists (after launch or after a move).
 
 ## Postconditions
 
-* The board matches the exact position before the last move.
-* The undone move is removed from the visible move history.
-* The captured piece display is restored if the undone move was a capture.
-* Check, checkmate, and stalemate status are recalculated.
-* The turn returns to the player who made the undone move.
-* The undone move becomes available for redo.
+* Header and overlays match `get_game_state(board)`: `'playing'`, `'check'`, `'checkmate'`, or `'stalemate'`.
+* On checkmate/stalemate, further **board** clicks do nothing until New Game.
 
 ## Trigger
 
-The player selects **"Undo."**
+End of each frame in `main()` (`state = get_game_state(board)`).
 
 ## Main Flow
 
-1. The player selects **"Undo."**
-2. The system checks that the game is not rated.
-3. The system sends an undo request to the opponent.
-4. The opponent accepts the request.
-5. The system reverts the board to the position before the last move.
-6. The system removes the move from the visible history and restores the prior captured piece state.
-7. The system recalculates check, checkmate, and stalemate status.
-8. The system returns the turn to the player who made the undone move.
-9. The system marks the undone move as available for redo.
+1. The system calls `is_checkmate(turn)`, else `is_stalemate(turn)`, else `is_in_check(turn)`.
+2. If playing: header is “White/Black to move”.
+3. If check: header is “{Color} is in check!” and the king square is drawn in check color.
+4. If checkmate: overlay “Checkmate!” and “{opposite color} wins”.
+5. If stalemate: overlay “Stalemate” / “The game is a draw”.
+6. The side panel continues to show captured pieces and `format_history(board.move_log)`.
 
 ## Alternate Flows
 
-### 2a. The current game is rated
+### 4a/5a. Player wants another game
 
-1. The system rejects the undo request.
-2. The system tells the player that undo is not available in rated games.
-3. The use case ends.
-4. No state changes occur.
+1. The player clicks **New Game** (Start Game).
+2. Overlays disappear because a new `Board` is not in a terminal state.
 
-### 4a. The opponent declines the undo request
-
-1. The system discards the request.
-2. The game continues unchanged.
-3. The use case ends.
-
-### 4b. The game is against the AI
-
-1. The system skips the consent step because there is no human opponent to ask.
-2. The system applies the undo immediately.
-3. The flow continues at **Step 5**.
-
-### 5a. The move being undone was a castling move
-
-1. The system moves the king and the rook back to their positions before castling.
-2. The system restores their prior **"has moved"** status if that status affects future castling rights.
-3. The flow continues at **Step 6**.
-
-### 5b. The move being undone was a pawn promotion
-
-1. The system replaces the promoted piece with a pawn on its original square.
-2. The flow continues at **Step 6**.
-
----
-
-# Use Case: Offer or Respond to Draw
-
-**Primary Actor:** Player
-
-## Stakeholders
-
-* The offering player wants a clear way to propose ending the game peacefully, separate from resigning.
-* The responding player wants the choice to accept or decline to be entirely their own.
-* Neither player wants ambiguity about what accepting a draw means.
-
-## Preconditions
-
-* A game is in progress.
-* The game has not already ended.
-
-## Postconditions
-
-### If the draw is accepted
-
-* The game status is set to **ended by agreed draw**.
-* The board no longer accepts moves.
-
-### If the draw is declined or withdrawn
-
-* The game state remains unchanged.
-* Play continues.
-
-## Trigger
-
-The player selects **"Offer Draw."**
-
-## Main Flow
-
-1. The player selects **"Offer Draw."**
-2. The system presents the draw offer to the opponent.
-3. The opponent selects **"Accept."**
-4. The system sets the game status to **ended by agreed draw**.
-5. The system disables further moves and shows the outcome to both players.
-
-## Alternate Flows
-
-### 3a. The opponent selects "Decline"
-
-1. The system discards the draw offer.
-2. The game continues unchanged.
-3. The use case ends.
-
-### 3b. The offering player withdraws the offer
-
-1. The offering player withdraws the offer before the opponent responds.
-2. The system cancels the pending offer and removes it from the opponent's view.
-3. The game continues unchanged.
-4. The use case ends without a decision from the opponent.
+There is no resign, agreed draw, or undo in the implementation.

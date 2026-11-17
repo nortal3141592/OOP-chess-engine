@@ -1,43 +1,50 @@
-@startuml
-left to right direction
-actor "Player" as P
+/'
+Team ID: 8
+Synced to the pygame UI in main.py and rules in board.py.
+'/
 
-rectangle "Chess Application" {
-  usecase "Start New Game" as UC1
-  usecase "Select Game Mode" as UC2
-  usecase "Make Move" as UC3
-  usecase "View Legal Moves" as UC4
-  usecase "Promote Pawn" as UC5
-  usecase "Play Against AI" as UC6
-  usecase "Resign Game" as UC7
-  usecase "Offer/Respond to Draw" as UC8
-  usecase "View Move History" as UC9
-  usecase "Annotate Board" as UC10
-  usecase "Restart Game" as UC11
-  usecase "Register Account" as UC12
-  usecase "Log In" as UC13
-  usecase "Log Out" as UC14
-  usecase "View Leaderboard" as UC15
-  usecase "View Player Profile" as UC16
+@startuml
+title Use case diagram — local two-player chess (as implemented)
+
+left to right direction
+actor "Human player\n(White or Black, same machine)" as P
+
+rectangle "Chess application (pygame window)" {
+  usecase "Start / restart game" as UC1
+  usecase "Select own piece" as UC2
+  usecase "View legal targets" as UC3
+  usecase "Make a move" as UC4
+  usecase "Castle" as UC5
+  usecase "Capture (incl. en passant)" as UC6
+  usecase "Auto-promote pawn to queen" as UC7
+  usecase "View move history" as UC8
+  usecase "View captured pieces" as UC9
+  usecase "See check / game-over overlay" as UC10
+  usecase "Quit window" as UC11
 }
 
 P --> UC1
-P --> UC3
-P --> UC6
-P --> UC7
+P --> UC2
+P --> UC4
 P --> UC8
 P --> UC9
 P --> UC10
 P --> UC11
-P --> UC12
-P --> UC13
-P --> UC14
-P --> UC15
-P --> UC16
 
-UC1 .> UC2 : <<include>>
-UC1 .> UC13 : <<include>>
-UC3 .> UC4 : <<include>>
-UC5 .> UC3 : <<extend>>
-UC12 .> UC13 : <<extend>>
+UC2 .> UC3 : <<include>>
+UC4 .> UC2 : <<include>>
+UC5 .> UC4 : <<extend>>
+UC6 .> UC4 : <<extend>>
+UC7 .> UC4 : <<extend>>
+
+note bottom of UC1
+  Launching main.py creates Board() immediately.
+  The "New Game" button also constructs Board().
+  No mode picker, login, or confirmation dialog.
+end note
+
+note bottom of UC7
+  Always Queen; the player cannot choose
+  knight / bishop / rook.
+end note
 @enduml

@@ -6,91 +6,227 @@ Team Members:
 3. Parth Doifode - 20251501125
 4. Mehta Aryan HarshitBhai - 20251501108
 5. Pal Rachhadiya - 20251501122
+
+Synced to the implemented Python modules: main.py, board.py, pieces.py.
 '/
 
 @startuml
-abstract class Player {
-  # color: Color
-  + selectMove(board: Board): Move
-}
-class HumanPlayer
-class AIPlayer
-Player <|-- HumanPlayer
-Player <|-- AIPlayer
+title Class diagram — local two-player chess (as implemented)
 
-class Account {
-  - username: String
-  - passwordHash: String
-  + authenticate(password: String): boolean
-}
-HumanPlayer "0..*" -- "1" Account : authenticated as
+skinparam classAttributeIconSize 0
+hide empty members
 
-class Game {
-  - mode: GameMode
-  - isRated: boolean
-  - status: GameStatus
-  - turn: Color
-  + start(): void
-  + applyMove(m: Move): void
-  + undoLastMove(): void
-  + redoMove(): void
-  + offerDraw(): DrawOffer
-  + requestUndo(): UndoRequest
-  + end(reason: GameEndReason): void
+package "main.py (pygame UI, no classes)" as mainpkg {
+  class Main <<module>> {
+    + SQUARE_SIZE: int = 70
+    + WINDOW_WIDTH: int
+    + WINDOW_HEIGHT: int
+    + PIECE_UNICODE: dict
+    + load_piece_images(square_size, padding): dict
+    + get_game_state(board): str
+    + format_history(moves): list
+    + draw_board(...)
+    + draw_header(...)
+    + draw_footer(...)
+    + draw_button(...)
+    + draw_captured_row(...)
+    + draw_side_panel(...)
+    + draw_game_over_box(...)
+    + main(): void
+  }
 }
-Game "1" *-- "2" Player : participants
 
-class Board {
-  - squares: Piece[8][8]
-  + reset(): void
-  + applyMove(m: Move): void
-  + undoMove(m: Move): void
-  + isInCheck(c: Color): boolean
-  + isCheckmate(): boolean
-  + isStalemate(): boolean
-}
-Game "1" *-- "1" Board
+package "board.py" as boardpkg {
+  class Board {
+    - _grid: Piece[8][8]
+    + turn: str
+    + en_passant_target: tuple | None
+    + move_log: list~Move~
+    + captured_pieces: dict~str, list~Piece~~
+    + last_move: Move | None <<property>>
+    + get_piece(square): Piece | None
+    + in_bounds(square): bool
+    + find_king(color): tuple | None
+    + is_square_attacked(square, by_color): bool
+    + is_in_check(color): bool
+    + get_legal_moves(square): list~Move~
+    + all_legal_moves(color): list~Move~
+    + has_legal_moves(color): bool
+    + is_checkmate(color): bool
+    + is_stalemate(color): bool
+    + move_piece(start, end): bool
+    - _setup_start_position()
+    - _pseudo_legal_moves(square): list~Move~
+    - _pawn_moves(square, piece): list~Move~
+    - _step_moves(square, piece, offsets): list~Move~
+    - _sliding_moves(square, piece, directions): list~Move~
+    - _castle_moves(square, piece): list~Move~
+    - _castle_rook_squares(move): tuple
+    - _affected_squares(move): set
+    - _shift_pieces(move)
+    - _leaves_king_in_check(move): bool
+    - _execute(move)
+  }
 
-class Piece {
-  - color: Color
-  - type: PieceType
-  - position: Position
+  class other_color <<procedure>> {
+    {static} other_color(color): str
+  }
 }
-Board "1" *-- "0..32" Piece : places
 
-class Move {
-  - from: Position
-  - to: Position
-  - isCapture: boolean
-  - isCastling: boolean
-  - isPromotion: boolean
-  - status: MoveStatus
-}
-Game "1" *-- "0..*" Move : records
-Move "0..*" -- "1" Piece : moves
-Move "0..1" -- "0..1" Piece : captures
+package "pieces.py — chess domain" as piecespkg {
+  class Move {
+    + start: tuple
+    + end: tuple
+    + piece: Piece
+    + captured_piece: Piece | None
+    + is_castle: bool
+    + is_en_passant: bool
+    + is_promotion: bool
+    + captured_square: tuple
+    {static} + square_name(square): str
+    + __eq__(other): bool
+    + __str__(): str
+    + __repr__(): str
+  }
 
-class Annotation {
-  - type: AnnotationType
-  - location: Position
-}
-Game "1" *-- "0..*" Annotation : displays
+  abstract class Piece {
+    {static} + piece_type: str | None
+    {static} # _base_value: int
+    + color: str
+    # _value: int
+    - __has_moved: bool
+    + has_moved: bool <<property>>
+    + {abstract} symbol(): str
+    + mark_moved(): Piece
+    + {final} describe(verbose=False): str
+    + __str__(): str
+    + __repr__(): str
+    + __eq__(other): bool
+    + __lt__(other): bool
+    + __hash__(): int
+  }
 
-class DrawOffer {
-  - status: OfferStatus
-  + accept(): void
-  + decline(): void
-  + withdraw(): void
-}
-Game "1" *-- "0..1" DrawOffer : has pending
-DrawOffer "1" -- "1" Player : offered by
+  class "Piece.Stats" as PieceStats {
+    {static} + total_created: int
+    {static} + created_by_type: dict
+    {static} + record(piece_type)
+    {static} + summary(): str
+  }
 
-class UndoRequest {
-  - status: RequestStatus
-  - requiresConsent: boolean
-  + accept(): void
-  + decline(): void
+  class Pawn {
+    {static} + piece_type = "pawn"
+    {static} # _base_value = 1
+    + symbol(): str
+  }
+
+  class Knight {
+    {static} + piece_type = "knight"
+    {static} # _base_value = 3
+    + symbol(): str
+  }
+
+  class Bishop {
+    {static} + piece_type = "bishop"
+    {static} # _base_value = 3
+    + symbol(): str
+  }
+
+  class Rook {
+    {static} + piece_type = "rook"
+    {static} # _base_value = 5
+    + symbol(): str
+  }
+
+  class Queen {
+    {static} + piece_type = "queen"
+    {static} # _base_value = 9
+    + symbol(): str
+  }
+
+  class King <<final>> {
+    {static} + piece_type = "king"
+    {static} # _base_value = 0
+    + symbol(): str
+  }
+
+  class PIECE_CLASSES <<map>> {
+    pawn -> Pawn
+    knight -> Knight
+    bishop -> Bishop
+    rook -> Rook
+    queen -> Queen
+    king -> King
+  }
 }
-Game "1" *-- "0..1" UndoRequest : has pending
-UndoRequest "0..1" -- "1" Player : requested by
+
+package "pieces.py — OOP demos (not used by the pygame game)" as demopkg {
+  class ConsoleStream {
+    + __lshift__(value): ConsoleStream
+  }
+
+  class GameEntity {
+    + entity_id: int
+  }
+
+  class Flyer {
+    + can_fly: bool
+  }
+
+  class Swimmer {
+    + can_swim: bool
+  }
+
+  class FlyingSwimmer
+
+  class slice_to_base <<procedure>> {
+    {static} slice_to_base(piece): Piece
+  }
+}
+
+Main ..> Board : creates and drives
+Main ..> Piece : Piece.Stats.summary / unicode fallback
+Main ..> ConsoleStream : console << summary
+Main ..> pygame : display, events, fonts, images
+
+Board "1" *-- "0..32" Piece : _grid
+Board "1" *-- "0..*" Move : move_log
+Board "1" o-- "0..*" Piece : captured_pieces
+Board ..> PIECE_CLASSES : constructs start position / promotion
+Board ..> Move : creates candidate moves
+
+Move "1" --> "1" Piece : piece
+Move "0..1" --> "0..1" Piece : captured_piece
+
+Piece <|-- Pawn
+Piece <|-- Knight
+Piece <|-- Bishop
+Piece <|-- Rook
+Piece <|-- Queen
+Piece <|-- King
+Piece +-- PieceStats
+PIECE_CLASSES ..> Pawn
+PIECE_CLASSES ..> Knight
+PIECE_CLASSES ..> Bishop
+PIECE_CLASSES ..> Rook
+PIECE_CLASSES ..> Queen
+PIECE_CLASSES ..> King
+
+GameEntity <|-- Flyer
+GameEntity <|-- Swimmer
+Flyer <|-- FlyingSwimmer
+Swimmer <|-- FlyingSwimmer
+
+note right of King
+  Promotion in Board._execute always
+  replaces a pawn on rank 1 or 8
+  with Queen(color, has_moved=True).
+  There is no promotion-choice UI.
+end note
+
+note bottom of Main
+  Game status is not a class.
+  get_game_state(board) returns
+  "playing" | "check" | "checkmate" | "stalemate".
+  New Game constructs a new Board().
+end note
 @enduml

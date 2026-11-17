@@ -1,24 +1,23 @@
 # Problem statement
 
-**Local Two-Player Chess Application**:
+**Local Two-Player Chess Application** (as built):
 
-- Two people want to play a game of chess, but that would need them to have a physical chess board which they don't have at the current moment or if it's too inconvenient to play on the chessboard. The other option that they have is to use online platforms like `chess.com` where a stable internet connection is needed and there's just too much going on the screen - chess tutor, chess ai, etc etc which is overwhelming for the user, the user was searching for something simple and minimalistic.
+- Two people want to play chess without a physical board and without a busy online site (`chess.com` and similar). They need one machine, a board that looks like chess, and a program that enforces the rules.
 
-- What they actually need is simple, they just want to sit at one machine, take turns making moves on a screen that feels and looks like a real chessboard, and have the computer handle all of the parts that a human is very likely to get wrong, like knowinng which moves are legal, catching illegal moves, recognizing check and checkmate and remember the history of the game so that nothing has to be written down.
+- They sit at the same computer, take turns in a Pygame window, and let the program decide which moves are legal, reject illegal ones, notice check / checkmate / stalemate, and keep a move list so nothing is written down by hand.
 
-- A player should be able to start a new game and immediately see a standard chess starting position. When it’s their turn, they should be able to click (or drag) a piece and see exactly where it’s allowed to go . 
+- Launching `main.py` (or clicking **New Game**) shows the standard starting position with White to move. On a player’s turn they **click** their piece, see legal destinations as green dots, then click a target square. There is no drag-and-drop.
 
-- The system should also take care of special chess scenarios: castling, en passant, and pawn promotion, including letting the player choose what their pawn becomes. 
+- Special rules are handled in `Board`: castling, en passant, and pawn promotion. Promotion is always to a **queen**; the player does not choose knight, bishop, or rook.
 
-- If a player’s king is in check, it should be informed to the user by the machine, and if the game ends, by checkmate, stalemate, resignation, or an agreed draw then the outcome should be shown clearly and the game should stop accepting moves.
+- If the side to move is in check, the header says so and the king’s square is highlighted. Checkmate and stalemate show an overlay and the board stops accepting clicks until **New Game**. There is no resign button and no agreed-draw offer.
 
-- Beyond the rules, the players should also feel familiar with the environment that they're so used to playing on, like `chess.com`. The last move played should stay highlighted, captured pieces should be visible off to the side, and there should be a running list of moves so far. 
+- The last move stays highlighted. Captured pieces appear in the side panel, grouped by who captured them. Move history is numbered (`e2-e4`, `O-O`, `=Q`).
 
-- Players also want to be able to sketch on the board, draw an arrow from one square to another, or highlight a square, without affecting the actual play, just like it happens on `chess.com`. When a game ends or a player wants a do-over, starting fresh should be one action away.
-
-- Just to be clear, this doesn't have any chess AI, or multiplayer battles or accounts. It’s a focused, minimalistic, local chess board for two people who already know how to play chess and want the computer to enforce the rules and get out of the way.
+- Starting over is one click: **New Game** builds a new `Board()` with no confirmation dialog. There are no board arrows, square highlights for annotation, accounts, networked play, or chess AI.
 
 ## Identify all actors, including any external systems and any schedules or time triggered actors
-- `Primary Actor`: Human Player, either side (White or Black). Same role, no behavioral distinction between them at the system-boundary level.
-- `External systems`: None. This is a local application. It does not call out to any external service (no network multiplayer, no cloud save, no rules database, no external chess engine).
-- `Scheduled / time-triggered actors`:  No time related events to keep it minimalistic since both of the players are sitting side by side so there's no risk of one player just leaving and the other playing not knowing about it.
+
+- **Primary actor:** Human player, either side (White or Black). Same role at the system boundary; whose turn it is is `Board.turn`.
+- **External systems:** None. Local Pygame app. No network, cloud save, rules service, or external engine. Sprites are local files under `assets/pieces/`.
+- **Scheduled / time-triggered actors:** None. The loop runs at 30 FPS for drawing only. There is no chess clock.
